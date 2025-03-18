@@ -3,8 +3,6 @@ import csv
 import os
 
 app = FastAPI()
-
-# Persistent storage path in GKE
 PERSISTENT_STORAGE_PATH = "/het_PV_dir"
 
 @app.post("/compute")
@@ -15,24 +13,22 @@ def compute(data: dict):
 
     file_path = os.path.join(PERSISTENT_STORAGE_PATH, data["file"])
 
-    # Check if file exists in persistent volume
     if not os.path.exists(file_path):
         return {"file": data["file"], "error": "File not found."}
 
-    # Read and process the CSV file
-    total = 0
     try:
         with open(file_path, 'r') as f:
             reader = csv.DictReader(f)
-            if not {"product", "amount"}.issubset(reader.fieldnames):
-                raise ValueError("Invalid CSV format")
+            expected_headers = {"product", "amount"}
+            if not expected_headers.issubset(set(reader.fieldnames or [])):
+                return {"file": data["file"], "error": "Invalid CSV format"}
 
             total = sum(int(row["amount"]) for row in reader if row["product"] == data["product"])
-        
+
         return {"file": data["file"], "sum": total}
 
     except (csv.Error, ValueError):
-        return {"file": data["file"], "error": "Input file not in CSV format."}
+        return {"file": data["file"], "error": "Invalid CSV data"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
