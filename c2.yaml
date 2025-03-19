@@ -1,0 +1,43 @@
+# Deployment for Container 2
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: container2-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: container2
+  template:
+    metadata:
+      labels:
+        app: container2
+    spec:
+      containers:
+        - name: container2
+          image: gcr.io/b00988337-w25-k8s/container2:latest
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - name: storage
+              mountPath: /het_PV_dir
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: container-storage-pvc
+
+---
+# Service for Container 2 (Cluster IP)
+apiVersion: v1
+kind: Service
+metadata:
+  name: container2-service
+spec:
+  type: ClusterIP
+  selector:
+    app: container2
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+
