@@ -23,10 +23,13 @@ def compute(data: dict):
 
             total = 0
             for row in reader:
-                product = row.get("product", "").strip()
-                amount = row.get("amount", "").strip()
+                product = row.get("product") or row.get(" product") or ""
+                amount = row.get("amount") or row.get(" amount") or ""
+                product = product.strip()
+                amount = amount.strip()
                 if product == data["product"] and amount.isdigit():
                     total += int(amount)
+
 
             return {"file": data["file"], "sum": total}
 
