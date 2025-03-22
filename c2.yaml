@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: container2
-          image: gcr.io/csci-5409-k8s-b00988337/container2:latest
+          image: us-central1-docker.pkg.dev/csci-5409-k8s-b00988337/container-02/container2:latest
           ports:
             - containerPort: 8000
           volumeMounts:
