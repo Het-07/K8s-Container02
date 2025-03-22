@@ -14,13 +14,16 @@ def compute(data: dict):
         return {"file": None, "error": "Invalid JSON input."}
 
     file_path = os.path.join(PERSISTENT_STORAGE_PATH, filename)
+
     if not os.path.exists(file_path):
         return {"file": filename, "error": "File not found."}
 
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             reader = csv.DictReader(f)
-            if not reader.fieldnames or "product" not in [h.strip() for h in reader.fieldnames] or "amount" not in [h.strip() for h in reader.fieldnames]:
+            headers = [h.strip().lower() for h in reader.fieldnames or []]
+
+            if "product" not in headers or "amount" not in headers:
                 return {"file": filename, "error": "Input file not in CSV format."}
 
             total = 0
@@ -32,5 +35,7 @@ def compute(data: dict):
 
         return {"file": filename, "sum": total}
 
+    except csv.Error:
+        return {"file": filename, "error": "Input file not in CSV format."}
     except:
         return {"file": filename, "error": "Input file not in CSV format."}
