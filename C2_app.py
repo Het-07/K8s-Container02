@@ -1,38 +1,49 @@
-# Container - 02
-from fastapi import FastAPI 
-import csv, os
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+import csv
+import os
 
 app = FastAPI()
 PERSISTENT_STORAGE_PATH = "/het_PV_dir"
 
 @app.post("/compute")
-def compute(data: dict):
-    if "file" not in data or "product" not in data:
-        return {"file": None, "error": "Invalid input"}
-
-    file_path = os.path.join(PERSISTENT_STORAGE_PATH, data["file"])
-    if not os.path.exists(file_path):
-        return {"file": data["file"], "error": "File not found."}
-
+async def compute(request: Request):
     try:
-        with open(file_path, "r") as f:
-            reader = csv.DictReader(f)
-            headers = [header.strip() for header in reader.fieldnames]
+        data = await request.json()
+        filename = data.get("file")
+        product = data.get("product")
 
-            if "product" not in headers or "amount" not in headers:
-                return {"file": data["file"], "error": "Input file not in CSV format."}
+        if not filename or not product:
+            return JSONResponse(status_code=400, content={"file": None, "error": "Invalid JSON input."})
 
-            total = 0
-            for row in reader:
-                clean_row = {k.strip(): v.strip() for k, v in row.items()}
-                if clean_row.get("product") == data["product"]:
-                    try:
-                        total += int(clean_row.get("amount", 0))
-                    except ValueError:
-                        continue
+        file_path = os.path.join(PERSISTENT_STORAGE_PATH, filename)
+        if not os.path.exists(file_path):
+            return {"file": filename, "error": "File not found."}
 
-        return {"file": data["file"], "sum": total}
+        try:
+            with open(file_path, newline='') as csvfile:
+                reader = csv.DictReader(csvfile)
+                headers = [h.strip() for h in reader.fieldnames]
 
-    except Exception as e:
-        return {"file": data["file"], "error": "Input file not in CSV format."}
+                # Check header validity
+                if "product" not in headers or "amount" not in headers:
+                    return {"file": filename, "error": "Input file not in CSV format."}
 
+                total = 0
+                for row in reader:
+                    row_product = row.get("product", "").strip()
+                    row_amount = row.get("amount", "").strip()
+
+                    if row_product == product:
+                        try:
+                            total += int(row_amount)
+                        except:
+                            return {"file": filename, "error": "Input file not in CSV format."}
+
+            return {"file": filename, "sum": total}
+
+        except:
+            return {"file": filename, "error": "Input file not in CSV format."}
+
+    except:
+        return JSONResponse(status_code=400, content={"file": None, "error": "Invalid JSON input."})
