@@ -7,31 +7,30 @@ PERSISTENT_STORAGE_PATH = "/het_PV_dir"
 
 @app.post("/compute")
 def compute(data: dict):
-    if "file" not in data or not data["file"] or "product" not in data or not data["product"]:
+    filename = data.get("file")
+    product = data.get("product")
+
+    if not filename or not product:
         return {"file": None, "error": "Invalid JSON input."}
 
-    file_path = os.path.join(PERSISTENT_STORAGE_PATH, data["file"])
+    file_path = os.path.join(PERSISTENT_STORAGE_PATH, filename)
     if not os.path.exists(file_path):
-        return {"file": data["file"], "error": "File not found."}
+        return {"file": filename, "error": "File not found."}
 
     try:
-        with open(file_path, "r") as f:
+        with open(file_path, 'r') as f:
             reader = csv.DictReader(f)
-            headers = [h.strip().lower() for h in reader.fieldnames]
-            if "product" not in headers or "amount" not in headers:
-                return {"file": data["file"], "error": "Input file not in CSV format."}
+            if not reader.fieldnames or "product" not in [h.strip() for h in reader.fieldnames] or "amount" not in [h.strip() for h in reader.fieldnames]:
+                return {"file": filename, "error": "Input file not in CSV format."}
 
             total = 0
             for row in reader:
-                product = row.get("product") or row.get(" product") or ""
-                amount = row.get("amount") or row.get(" amount") or ""
-                product = product.strip()
-                amount = amount.strip()
-                if product == data["product"] and amount.isdigit():
-                    total += int(amount)
+                prod = row.get("product", "").strip()
+                amt = row.get("amount", "").strip()
+                if prod == product and amt.isdigit():
+                    total += int(amt)
 
+        return {"file": filename, "sum": total}
 
-            return {"file": data["file"], "sum": total}
-
-    except Exception:
-        return {"file": data["file"], "error": "Input file not in CSV format."}
+    except:
+        return {"file": filename, "error": "Input file not in CSV format."}
