@@ -1,5 +1,5 @@
 # Container - 02
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI 
 import csv, os
 
 app = FastAPI()
