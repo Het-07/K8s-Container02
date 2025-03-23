@@ -5,7 +5,7 @@ import os
 app = FastAPI()
 PERSISTENT_STORAGE_PATH = "/het_PV_dir"
 
-@app.post("/calculate")
+@app.post("/compute")
 def compute(data: dict):
     filename = data.get("file")
     product = data.get("product")
@@ -17,10 +17,11 @@ def compute(data: dict):
     if not os.path.exists(file_path):
         return {"file": filename, "error": "File not found."}
 
+    results = []
     try:
         with open(file_path, 'r') as f:
             reader = csv.DictReader(f)
-
+            
             if not reader.fieldnames:
                 return {"file": filename, "error": "Input file not in CSV format."}
 
@@ -28,12 +29,16 @@ def compute(data: dict):
             if "product" not in headers or "amount" not in headers:
                 return {"file": filename, "error": "Input file not in CSV format."}
 
-            total = 0
             for row in reader:
-                row = {k.strip().lower(): v.strip() for k, v in row.items()}
-                if row.get("product") == product and row.get("amount", "").isdigit():
-                    total += int(row["amount"])
+                cleaned_row = {k.strip().lower(): v.strip() for k, v in row.items()}
+                if cleaned_row.get("product") == product:
+                    try:
+                        amount = int(cleaned_row.get("amount", ""))
+                        results.append(amount)
+                    except ValueError:
+                        continue
 
+        total = sum(results)
         return {"file": filename, "sum": total}
 
     except Exception:
