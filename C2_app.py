@@ -5,7 +5,7 @@ import os
 app = FastAPI()
 PERSISTENT_STORAGE_PATH = "/het_PV_dir"
 
-@app.post("/compute")
+@app.post("/calculate")
 def compute(data: dict):
     filename = data.get("file")
     product = data.get("product")
