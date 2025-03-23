@@ -6,7 +6,7 @@ app = FastAPI()
 PERSISTENT_STORAGE_PATH = "/het_PV_dir"
 
 # ----------------------------------------------------------
-
+# Endpoint to compute sum of product amounts from CSV file.
 # ----------------------------------------------------------
 @app.post("/compute")
 def compute(data: dict):
