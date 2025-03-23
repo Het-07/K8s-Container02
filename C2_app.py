@@ -1,5 +1,3 @@
-# Container - 02
-
 from fastapi import FastAPI
 import csv
 import os
