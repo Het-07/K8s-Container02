@@ -21,17 +21,18 @@ def compute(data: dict):
         return {"file": filename, "error": "File not found."}
 
     try:
-        with open(file_path, 'r') as f:
-            reader = csv.DictReader(f)
-            if not reader.fieldnames or "product" not in [h.strip().lower() for h in reader.fieldnames] or "amount" not in [h.strip().lower() for h in reader.fieldnames]:
+        if not reader.fieldnames:
+            return {"file": filename, "error": "Input file not in CSV format."}
+            
+        headers = [h.strip().lower() for h in reader.fieldnames]
+        if "product" not in headers or "amount" not in headers:
                 return {"file": filename, "error": "Input file not in CSV format."}
 
-            total = 0
-            for row in reader:
-                prod = row.get("product", "").strip()
-                amt = row.get("amount", "").strip()
-                if prod == product and amt.isdigit():
-                    total += int(amt)
+        total = 0
+        for row in reader:
+            row = {k.strip().lower(): v.strip() for k, v in row.items()}
+            if row.get("product") == product and row.get("amount", "").isdigit():
+                total += int(row["amount"])
 
         return {"file": filename, "sum": total}
 
